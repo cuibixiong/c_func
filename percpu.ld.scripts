@@ -1,0 +1,37 @@
+OUTPUT_FORMAT("elf32-littlearm")
+OUTPUT_ARCH(arm)
+ENTRY(_start)
+SECTIONS
+{
+	.text	: {
+		_stext = .;
+		__exception_text_start = .;
+		*(.exception.text)
+		__exception_text_end = .;
+		*(.text)
+	}
+	_etext = .; 
+
+	.got   : {
+		*(.got)
+	}
+
+	.data.percpu	: {
+		__per_cpu_start = .;
+		*(.data.percpu)
+		__per_cpu_end = .;
+	}
+
+	_data = .; {
+		*(.data)
+	}
+	_edata = .;
+
+	__bss_start = .;
+	.bss : {
+		*(.bss)
+	}
+	__bss_end = .;
+
+	_end = .;
+}
