@@ -181,6 +181,21 @@ static inline void list_splice_init(struct list_head *list,
      }
 }
 
+static inline void list_swap(struct list_head *node1,struct list_head *node2)
+{
+    struct list_head *temp = node1->prev;
+ 
+    (node1->prev)->next = node2;
+    (node2->prev)->next = node1;
+    node1->prev = node2->prev;
+    node2->prev = temp;
+    node1->next->prev = node2;
+    node2->next->prev = node1;
+    temp = node1->next;
+    node1->next = node2->next;
+    node2->next = temp;   
+}
+
 /**
 * list_entry ?C get the struct for this entry
 * @ptr:    the &struct list_head pointer.
