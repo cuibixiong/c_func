@@ -1,0 +1,77 @@
+检出仓库：
+     $ git clone git://github.com/jquery/jquery.git
+查看远程仓库：
+     $ git remote -v
+添加远程仓库：
+     $ git remote add [name] [url]
+删除远程仓库：
+     $ git remote rm [name]
+修改远程仓库：
+     $ git remote set-url --push [name] [newUrl]
+拉取远程仓库：
+     $ git pull [remoteName] [localBranchName]
+推送远程仓库：
+     $ git push [remoteName] [localBranchName]
+提交本地test分支作为远程的master分支 ：
+     $git push origin test:master
+提交本地test分支作为远程的test分支：
+     $git push origin test:test
+gerrit提交更改：
+     无log：
+     git push ssh://xxx@xxx:xxx/test HEAD:refs/heads/master
+     有log
+     git push ssh://xxx@xxxx:xxx/build HEAD:refs/for/master
+查看本地分支：
+     $ git branch
+查看远程分支：
+     $ git branch -r
+创建本地分支：
+     $ git branch [name] ----注意新分支创建后不会自动切换为当前分支
+切换分支：
+     $ git checkout [name]
+创建新分支并立即切换到新分支：
+     $ git checkout -b [name]
+删除分支：
+     $ git branch -d [name] ---- -d选项只能删除已经参与了合并的分支，对于未有合并的分支是无法删除的。
+          如果想强制删除一个分支，可以使用-D选项
+合并分支：
+     $ git merge [name] ----将名称为[name]的分支与当前分支合并
+创建远程分支(本地分支push到远程)：
+     $ git push origin [name]
+删除远程分支：
+     $ git push origin :heads/[name] 或 $ git push origin :[name]
+查看版本：
+     $ git tag
+创建版本：
+     $ git tag [name]
+删除版本：
+     $ git tag -d [name]
+查看远程版本：
+     $ git tag -r
+删除远程版本：
+     $ git push origin :refs/tags/[name]
+合并远程仓库的tag到本地：
+     $ git pull origin --tags
+上传本地tag到远程仓库：
+     $ git push origin --tags
+创建带注释的tag：
+     $ git tag -a [name] -m 'yourMessage'
+版本库文件打包：
+     git archive --format zip -o $(git branch -a |grep \*|awk '{ print $2 }')-$(git log --date=short --pretty=format:"%ad" -1).zip HEAD
+撤销某个文件：
+     git checkout -- file
+     git ls-files -d |xargs git checkout --
+在最后提交中更改Export（Export changes done in last commit ）
+git archive -o ../updated.zip HEAD $(git diff --name-only HEAD^)
+在两次提交之间更改Export文件（Export changed files between two commits）
+git archive -o ../latest.zip NEW_COMMIT_ID_HERE $(git diff --name-only OLD_COMMIT_ID_HERE NEW_COMMIT_ID_HERE)
+克隆一个特定的远程分支（Clone a specific remote branch）
+git init  
+git remote add -t BRANCH_NAME_HERE -f origin REMOTE_REPO_URL_PATH_HERE  
+git checkout BRANCH_NAME_HERE
+ 从不相关的本地资源库中应用补丁（Apply patch from Unrelated local repository）
+view plaincopy to clipboardprint?
+git --git-dir=PATH_TO_OTHER_REPOSITORY_HERE/.git format-patch -k -1 --stdout COMMIT_HASH_ID_HERE| git am -3 -k
+从其他分支签出文件但无需切换分支（ Checkout File from Other Branch without Switching Branches ）
+git checkout BRANCH_NAME_HERE -- PATH_TO_FILE_IN_BRANCH_HERE
+
