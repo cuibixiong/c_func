@@ -1,4 +1,3 @@
-//其中，x为要计算或者检查的值，align是要对齐的单位
 
 #define ROUND_UP(x, align) (((int) (x) + (align - 1)) & ~(align - 1))
 #define ROUND_DOWN(x, align) ((int)(x) & ~(align - 1))

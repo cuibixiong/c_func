@@ -3,6 +3,6 @@
 
 void foo()
 {
-	void *P = NULL;
-	STATIC_NULL_ASSERT(p == NULL);
+	char buf[1024];
+	STATIC_NULL_ASSERT(sizeof(buf) == 1024);
 }

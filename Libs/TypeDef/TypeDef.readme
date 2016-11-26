@@ -1,0 +1,53 @@
+int integer;     //整型变量
+int *pointer;   //整型指针变量
+int array [5]; //整型数组变量
+int *p_array [5]; //整型指针的数组的变量
+int (*array_pointer) [5];//整型数组的指针的变量
+int function (int param);//函数定义，也可将函数名看作函数的变量
+int *function (int param);//仍然是函数，但返回值是整型指针
+int (*function) (int param);//现在就是指向函数的指针了
+
+若要定义相应类型，即为类型来起名字，就是下面的形式：
+typedef int integer_t;                      //整型类型
+typedef int *pointer_t;     //整型指针类型
+typedef int array_t [5]; //整型数组类型
+typedef int *p_array_t [5];    //整型指针的数组的类型
+typedef int (*array_pointer_t) [5]; //整型数组的指针的类型
+typedef int function_t (int param);     //函数类型
+typedef int *function_t (int param);    //函数类型
+typedef int (*function_t) (int param); //指向函数的指针的类型
+
+
+>1 int *(*a[5])(void *,void *);
+
+>2 void (*b[5])(void (*)());
+
+>3 float (*)()(*pa)[10];
+
+分析如下：
+
+>1 int *(*a[5])(void *,void *);
+
+//pFUN是自己建立的类型别名 typedef int *(* pFUN)(void  *,void *); //等价于int *(*a[5])(void *,void *); 
+
+pFUN a[5];  a是一个数组，包含五个元素，这些元素都是函数指针,该函数指针所指的函数的返回值是int的指针 输入参数有两个都是void *.
+
+>2 void (*b[5])( void (*)() );
+
+// first 为蓝色的 声明一个新的类型 typedef void (*pFUNParam)( );
+
+//整体声明一个新类型  typedef void (*pFUN)(FUNParam); 
+
+//使用定义的新类型声明对象 等价于void (*b[5])( void (*)() ); 
+
+pFUN b[5]; b 是一个含有5个元素的数组,每个元素都是一个函数指针，该函数指针所指的函数的返回值是void.输入参数是另一个函数指针,这个函数指针没有参数,返回值为空。在这里套用了连续的函数指针。本身就是一个函数指针，而且参数也是一个函数指针。
+
+>3 float (*)()(*pa)[10];
+
+//first 为上面的蓝色表达式声明一个新类型 typedef float (*pFUN)(); 
+
+//整体声明一个新类型typedef pFUN (* pFunParam)[10];
+
+//使用定义的新类型来声明对象 等价与float (*)()(*pa)[10];
+
+pa 是一个指针，指针指向一个含有10个元素的数组,数组的元素是函数指针,函数指针所指的函数没有输入参数,返回值为float.
