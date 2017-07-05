@@ -1,0 +1,7 @@
+To build, type 'make'
+To modify, edit main.c -> main(); edit nandflash_4740.c->nand_init_4740()-> REG_EMC_SMCR1
+
+Usage:
+
+	./nandprog	-> program one or more partitions with one or more files defined in main.c
+	./nandprog check -> check data

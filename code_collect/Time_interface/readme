@@ -1,0 +1,11 @@
+libnss_file* : move this two files into /mipsroot/lib/, this is needed by ntpdate
+
+ntpdate: move this file into /mipsroot/bin/
+
+
+ntp.conf: move this file into /mipsroot/etc/
+
+time_interface.h timetest.c : rtc & time interface and demo soucre code
+
+timetestmips : test demo based on time_interface.h & timetest.c 
+
