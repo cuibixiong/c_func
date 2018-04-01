@@ -19,7 +19,7 @@
 gerrit提交更改：
      无log：
      git push ssh://xxx@xxx:xxx/test HEAD:refs/heads/master
-     有log
+     * 有log *
      git push ssh://xxx@xxxx:xxx/build HEAD:refs/for/master
 查看本地分支：
      $ git branch
@@ -33,7 +33,7 @@ gerrit提交更改：
      $ git checkout -b [name]
 删除分支：
      $ git branch -d [name] ---- -d选项只能删除已经参与了合并的分支，对于未有合并的分支是无法删除的。
-          如果想强制删除一个分支，可以使用-D选项
+     如果想强制删除一个分支，可以使用-D选项
 合并分支：
      $ git merge [name] ----将名称为[name]的分支与当前分支合并
 创建远程分支(本地分支push到远程)：
@@ -75,3 +75,8 @@ git --git-dir=PATH_TO_OTHER_REPOSITORY_HERE/.git format-patch -k -1 --stdout COM
 从其他分支签出文件但无需切换分支（ Checkout File from Other Branch without Switching Branches ）
 git checkout BRANCH_NAME_HERE -- PATH_TO_FILE_IN_BRANCH_HERE
 
+统计代码贡献量  
+git log –author=”$(git config --get user.name)" --pretty=tformat: --numstat | gawk '{ add += $1 ; subs += $2 ; loc += $1 - $2 } END { printf “added lines: %s removed lines : %s total lines: %s\n”,add,subs,loc }’ -
+
+统计代码贡献量前5名 
+git log –pretty=format:%ae | gawk – ‘{ ++c[$0]; } END { for(cc in c) printf “%5d %s\n”,c[cc],cc; }’ | sort -u -n -r | head -n 5
