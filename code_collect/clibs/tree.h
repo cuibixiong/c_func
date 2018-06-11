@@ -25,4 +25,12 @@ typedef struct _HierTree
     TreeNode *root;
 } HierTree;
 
-static HierTree *g_hiertree;
+HierTree *g_hiertree;
+
+extern int NAME_TO_INDEX(HierNode *node, char *name);
+extern void hiertree_init();
+extern HierNode *set_root(NodeData data);
+extern HierNode *set_child(int parentIndex, int index, NodeData data);
+extern HierNode *get_node_by_index(int index);
+extern HierNode *_get_node_by_index(HierNode *node, int index);
+extern void traversal(HierNode *tree);
