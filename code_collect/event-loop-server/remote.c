@@ -14,17 +14,11 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
-#if USE_WIN32API
-#include <winsock2.h>
-#endif
-
-#if USE_WIN32API
-#define INVALID_DESCRIPTOR INVALID_SOCKET
-#else
 #define INVALID_DESCRIPTOR -1
-#endif
 
 /* Extra value for readchar_callback.  */
 enum {
@@ -39,16 +33,13 @@ static int readchar_callback = NOT_SCHEDULED;
 static int readchar(void);
 static void reset_readchar(void);
 static void reschedule(void);
+static int read_prim (void *buf, int count);
+static int write_prim (const void *buf, int count);
 
 static int remote_is_stdio = 0;
 
 remote_fildes_t remote_desc = INVALID_DESCRIPTOR;
 remote_fildes_t listen_desc = INVALID_DESCRIPTOR;
-
-#ifdef USE_WIN32API
-#define read(fd, buf, len) recv(fd, (char *)buf, len, 0)
-#define write(fd, buf, len) send(fd, (char *)buf, len, 0)
-#endif
 
 int is_remote_connected(void) { return remote_desc != INVALID_DESCRIPTOR; }
 
@@ -85,19 +76,8 @@ static int handle_accept_event(int err, remote_client_data client_data) {
   tmp = 1;
   setsockopt(remote_desc, IPPROTO_TCP, TCP_NODELAY, (char *)&tmp, sizeof(tmp));
 
-#ifndef USE_WIN32API
   signal(SIGPIPE, SIG_IGN); /* If we don't do this, then server simply
                                exits when the remote side dies.  */
-#endif
-
-  if (run_once) {
-#ifndef USE_WIN32API
-    close(listen_desc); /* No longer need this */
-#else
-    closesocket(listen_desc); /* No longer need this */
-#endif
-  }
-
   /* Even if !RUN_ONCE no longer notice new connections.  Still keep the
      descriptor open for add_file_handler to wait for a new connection.  */
   delete_file_handler(listen_desc);
@@ -128,9 +108,6 @@ static int handle_accept_event(int err, remote_client_data client_data) {
    NAME is the filename used for communication.  */
 void remote_prepare(char *name) {
   char *port_str;
-#ifdef USE_WIN32API
-  static int winsock_initialized;
-#endif
   int port;
   struct sockaddr_in sockaddr;
   socklen_t tmp;
@@ -152,16 +129,7 @@ void remote_prepare(char *name) {
 
   port = strtoul(port_str + 1, &port_end, 10);
   if (port_str[1] == '\0' || *port_end != '\0')
-    fatal("Bad port argument: %s", name);
-
-#ifdef USE_WIN32API
-  if (!winsock_initialized) {
-    WSADATA wsad;
-
-    WSAStartup(MAKEWORD(1, 0), &wsad);
-    winsock_initialized = 1;
-  }
-#endif
+    printf("Bad port argument: %s", name);
 
   listen_desc = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (listen_desc == -1) perror("Can't open socket");
@@ -186,10 +154,6 @@ void remote_open(char *name) {
   char *port_str;
 
   port_str = strchr(name, ':');
-#ifdef USE_WIN32API
-  if (port_str == NULL)
-    error("Only <host>:<port> is supported on this platform.");
-#endif
 
   if (strcmp(name, STDIO_CONNECTION_NAME) == 0) {
     fprintf(stderr, "Remote debugging using stdio\n");
@@ -203,7 +167,6 @@ void remote_open(char *name) {
     /* Register the event loop handler.  */
     add_file_handler(remote_desc, handle_serial_event, NULL);
   }
-#ifndef USE_WIN32API
   else if (port_str == NULL) {
     struct stat statbuf;
 
@@ -268,7 +231,6 @@ void remote_open(char *name) {
     /* Register the event loop handler.  */
     add_file_handler(remote_desc, handle_serial_event, NULL);
   }
-#endif /* USE_WIN32API */
   else {
     int port;
     socklen_t len;
@@ -291,11 +253,8 @@ void remote_open(char *name) {
 void remote_close(void) {
   delete_file_handler(remote_desc);
 
-#ifdef USE_WIN32API
-  closesocket(remote_desc);
-#else
   if (!is_remote_connection_is_stdio()) close(remote_desc);
-#endif
+
   remote_desc = INVALID_DESCRIPTOR;
 
   reset_readchar();
@@ -316,6 +275,7 @@ static void input_interrupt(int unused) {
 
   FD_ZERO(&readset);
   FD_SET(remote_desc, &readset);
+
   if (select(remote_desc + 1, &readset, 0, 0, &immediate) > 0) {
     int cc;
     char c = 0;
@@ -346,13 +306,11 @@ void check_remote_input_interrupt_request(void) {
    the client.  */
 
 static void unblock_async_io(void) {
-#ifndef USE_WIN32API
   sigset_t sigio_set;
 
   sigemptyset(&sigio_set);
   sigaddset(&sigio_set, SIGIO);
   sigprocmask(SIG_UNBLOCK, &sigio_set, NULL);
-#endif
 }
 
 /* Current state of asynchronous I/O.  */
@@ -362,26 +320,16 @@ static int async_io_enabled;
 void enable_async_io(void) {
   if (async_io_enabled) return;
 
-#ifndef USE_WIN32API
   signal(SIGIO, input_interrupt);
-#endif
   async_io_enabled = 1;
-#ifdef __QNX__
-  nto_comctrl(1);
-#endif /* __QNX__ */
 }
 
 /* Disable asynchronous I/O.  */
 void disable_async_io(void) {
   if (!async_io_enabled) return;
 
-#ifndef USE_WIN32API
   signal(SIGIO, SIG_IGN);
-#endif
   async_io_enabled = 0;
-#ifdef __QNX__
-  nto_comctrl(0);
-#endif /* __QNX__ */
 }
 
 void initialize_async_io(void) {
@@ -456,3 +404,26 @@ static void reschedule(void) {
   if (readchar_bufcnt > 0 && readchar_callback == NOT_SCHEDULED)
     readchar_callback = append_callback_event(process_remaining, NULL);
 }
+
+static int
+write_prim (const void *buf, int count)
+{
+  if (is_remote_connection_is_stdio ())
+    return write (fileno (stdout), buf, count);
+  else
+    return write (remote_desc, buf, count);
+}
+
+/* Read COUNT bytes from the client and store in BUF.
+   The result is the number of bytes read or -1 if error.
+   This may return less than COUNT.  */
+
+static int
+read_prim (void *buf, int count)
+{
+  if (is_remote_connection_is_stdio ())
+    return read (fileno (stdin), buf, count);
+  else
+    return read (remote_desc, buf, count);
+}
+
