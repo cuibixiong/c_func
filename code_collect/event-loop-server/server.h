@@ -1,26 +1,18 @@
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef __SERVER_H__
+#define __SERVER_H__
 
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_ERRNO_H
 #include <errno.h>
-#endif
 #include <setjmp.h>
 
-#ifdef HAVE_STRING_H
 #include <string.h>
-#endif
 
-#ifdef HAVE_ALLOCA_H
 #include <alloca.h>
-#endif
 /* On some systems such as MinGW, alloca is declared in malloc.h
    (there is no alloca.h).  */
-#if HAVE_MALLOC_H
 #include <malloc.h>
-#endif
 
 #if !HAVE_DECL_STRERROR
 #ifndef strerror
@@ -47,5 +39,37 @@ int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 #define _(String) (String)
 #endif
 
+#define PBUFSIZ 16384
+
+#if USE_WIN32API
+#include <winsock2.h>
+typedef SOCKET remote_fildes_t;
+#else
+typedef int remote_fildes_t;
+#endif
+
+/* Functions from event-loop.c.  */
+typedef void *remote_client_data;
+typedef int (handler_func) (int, remote_client_data);
+typedef int (callback_handler_func) (remote_client_data);
+
+extern void delete_file_handler (remote_fildes_t fd);
+extern void add_file_handler (remote_fildes_t fd, handler_func *proc,
+			      remote_client_data client_data);
+extern int append_callback_event (callback_handler_func *proc,
+				   remote_client_data client_data);
+extern void delete_callback_event (int id);
+
+extern void start_event_loop (void);
+extern void initialize_event_loop (void);
+
+/* Functions from server.c.  */
+extern int handle_serial_event (int err, remote_client_data client_data);
+extern int handle_target_event (int err, remote_client_data client_data);
+
+#define STDIO_CONNECTION_NAME "stdio"
+
+extern int run_once;
+extern int transport_is_reliable;
 
 #endif
