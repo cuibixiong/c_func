@@ -1,0 +1,34 @@
+genrule(
+    name = "ver",
+    srcs = ["//scripts:version"],
+    outs = ["ver.h",],
+    cmd = "bash $(location //scripts:uversion) > $@",
+    stamp = 1,
+    visibility = ["//visibility:public"],
+)
+
+genrule(
+    name = "impl",
+    srcs = ["//scripts:tracegen", "sample-events"],
+    outs = ["impl.cc",],
+    cmd = "python $(location //scripts:tracegen) $(location sample-events) -o event_impl > $@",
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "lib",
+    srcs = [":impl", ":ver",] + glob(["*.cc", "*.cpp"]),
+    hdrs = glob(["*.h", "*.inl"]),
+    linkopts = ["-pthread", "-L/usr/local/lib -pthread"],
+  copts = ["-std=gnu++11"],
+    defines = ["DEBUG", "DTU_HOOK"],
+    deps = [
+        "@include//:include",
+        "//third-party:spdlog",
+        ":trace",
+    ],
+    data = [
+        "@model//mock:mock",
+    ],
+    visibility = ["//visibility:public"]
+)
