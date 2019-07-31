@@ -37,3 +37,19 @@ class S
         //       due to the compilers behavior to check accessibility
         //       before deleted status
 };
+
+
+
+struct fragment
+  {
+    std::string name;
+    uint64_t ts;
+
+    bool edge;
+
+    // sort by ts
+    bool operator <(const fragment p) const
+    {
+      return ts < p.ts;
+    }
+  };
