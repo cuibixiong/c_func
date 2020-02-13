@@ -53,3 +53,104 @@ struct fragment
       return ts < p.ts;
     }
   };
+  
+static inline std::ostream& operator<<(std::ostream& out, const ProfileData& p)
+{
+  out << p.coords_ << std::endl;
+  out << p.ip_ << std::endl;
+  out << p.event_type_ << std::endl;
+  out << "cycle:" << p.cycle_ << std::endl;
+  out << "counter:" << p.counter_ << std::endl;
+  out << "counter val:" << p.counter_val_ << std::endl;
+  return out;
+}
+
+class HW {
+ public:
+  static void CreateInstance(DTU_HWAPI_USE mach, uint64_t ip_mask)
+  {
+    GetInstanceImpl(mach, ip_mask);
+  }
+
+  static void CreateInstance(DTU_HWAPI_USE mach, std::string &ip_layout)
+  {
+    GetInstanceImpl(mach, dtu_convert_layout2mask(mach, ip_layout.c_str()));
+  }
+
+  static HW& GetInstance() {
+    return GetInstanceImpl(mach_, ip_mask_);
+  }
+
+  static HW &GetInstanceImpl(DTU_HWAPI_USE mach, uint64_t ip_mask) {
+    static HW instance_;
+
+    if (instance_.GetAPI() == nullptr) {
+      dtu_get_hwapi(DTU_HWAPI_TARGET_API_VERSION_MAJOR,
+                  DTU_HWAPI_TARGET_API_VERSION_MINOR,
+                  DTU_HWAPI_TARGET_API_VERSION_REVISION, &hw_access_api_);
+
+      instance_.GetAPI()->initialize(mach);
+      dtu_set_ip_mask(ip_mask);
+
+      mach_ = mach;
+      ip_mask_ = ip_mask;
+
+      // TODO
+      instance_.GetAPI()->get_device_attr(-1, DTU_HWAPI_ATTR_DEV_CNT, &num_of_dev_);
+      instance_.GetAPI()->get_device_attr(0, DTU_HWAPI_ATTR_CLUSTER_CNT, &num_of_cluster_);
+      instance_.GetAPI()->get_device_attr(0, DTU_HWAPI_ATTR_SIP_CNT, &num_of_sip_);
+      instance_.GetAPI()->get_device_attr(0, DTU_HWAPI_ATTR_ODMA_CNT, &num_of_odma_);
+      instance_.GetAPI()->get_device_attr(0, DTU_HWAPI_ATTR_CDMA_CNT, &num_of_cdma_);
+      instance_.GetAPI()->get_device_attr(0, DTU_HWAPI_ATTR_SDMA_CNT, &num_of_sdma_);
+    }
+
+    return instance_;
+  }
+
+  ~HW() {
+    hw_access_api_->finalize();
+  }
+
+  Status ReadRegister(Coords &coords, uint32_t offset, void *val);
+  Status WriteRegister(Coords &coords, uint32_t offset, void *val);
+  Status ReadMemory(Coords &coords, uint64_t addr, void *buf, size_t sz);
+  Status WriteMemory(Coords &coords, uint64_t addr, void *buf, size_t sz);
+  uint32_t RegOffset(const std::string &reg_name, const std::string &ip_name);
+  DTU_HWAPI_TARGET_API *GetAPI() { return hw_access_api_; }
+
+public:
+  DISALLOW_COPY_AND_ASSIGN(HW);
+
+  int32_t num_of_dev() { return num_of_mc_ ; }
+  int32_t num_of_cluster() { return num_of_mc_ ; }
+  int32_t num_of_sip() { return num_of_mc_ ; }
+
+  int32_t num_of_odma() { return num_of_odma_; }
+  int32_t num_of_cdma() { return num_of_cdma_; }
+  int32_t num_of_sdma() { return num_of_sdma_; }
+
+  int32_t num_of_mc() { return num_of_mc_; }
+  int32_t num_of_pmc() { return num_of_pmc_; }
+
+private:
+  HW() {};
+
+private:
+  static DTU_HWAPI_TARGET_API *hw_access_api_;
+
+  static DTU_HWAPI_USE mach_;
+  static uint64_t ip_mask_;
+
+  static int32_t num_of_odma_;
+  static int32_t num_of_cdma_;
+  static int32_t num_of_sdma_;
+
+  static int32_t num_of_dev_;
+  static int32_t num_of_cluster_ ;
+  static int32_t num_of_sip_;
+
+  // TODO
+  static const int32_t num_of_mc_;
+  static const int32_t num_of_pmc_;
+};
+
