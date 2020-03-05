@@ -160,3 +160,18 @@ std::unique_ptr<T> make_unique(Args&&... args)
 {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
+
+
+class variant_visitor : public boost::static_visitor<std::string const &> {
++  public:
++   std::string const& operator()(const double &i) { output += std::to_string(i); return output;}
++   std::string const& operator()(const int32_t &i) { output += std::to_string(i); return output;}
++   std::string const& operator()(std::string &i) { return std::move(i); }
++   std::string output = "";
++ };
+int main()
+{
+  variant_visitor vis;
+  auto v = boost::apply_visitor(vis, arg.second);
+}
+}
