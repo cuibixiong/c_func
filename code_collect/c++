@@ -175,3 +175,16 @@ int main()
   auto v = boost::apply_visitor(vis, arg.second);
 }
 }
+
+ sort(myVec.begin(), myVec.end(), [](const Foo &foo1, const Foo &foo2)
+    {                                                 // 排序三：使用 lambda 的方式进行排序，排序的方法和 Foo::decrease 一样
+        if (foo1.a > foo2.a)
+        {
+            return true;
+        }
+        else if (foo1.a == foo2.a)
+        {
+            return foo1.b > foo2.b;
+        }
+        return false;
+    }   );
