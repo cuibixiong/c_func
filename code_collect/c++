@@ -248,3 +248,38 @@ public:
 };
 
 #endif //PROGRESSBAR_PROGRESSBAR_HPP
+
+static void *memcpy_(void *dst0, const void *src0, size_t length) {
+  typedef int word;
+
+#define wsize sizeof(word)
+#define wmask (wsize - 1)
+
+  char *dst = (char *)dst0;
+  const char *src = (const char *)src0;
+  size_t t;
+
+  if (length == 0 || dst == src) goto done;
+#define TLOOP(s) \
+  if (t) TLOOP1(s)
+#define TLOOP1(s) \
+  do {            \
+    s;            \
+  } while (--t)
+  t = (uintptr_t)src;
+  if ((t | (uintptr_t)dst) & wmask) {
+    if ((t ^ (uintptr_t)dst) & wmask || length < wsize)
+      t = length;
+    else
+      t = wsize - (t & wmask);
+    length -= t;
+    TLOOP1(*dst++ = *src++);
+  }
+  // word
+  t = length / wsize;
+  TLOOP(*(word *)dst = *(word *)src; src += wsize; dst += wsize);
+  t = length & wmask;
+  TLOOP(*dst++ = *src++);
+done:
+  return (dst0);
+}
