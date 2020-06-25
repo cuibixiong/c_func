@@ -283,3 +283,13 @@ static void *memcpy_(void *dst0, const void *src0, size_t length) {
 done:
   return (dst0);
 }
+
+std::ifstream f("file.txt");
+
+if (f)
+{
+  std::string str((std::istreambuf_iterator<char>(f)),
+                  std::istreambuf_iterator<char>());
+
+  // Operations on `str`...
+}
