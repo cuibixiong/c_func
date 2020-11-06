@@ -2,7 +2,7 @@ template<typename T, typename... Args>
 std::unique_ptr<T> make_unique(Args&&... args) {
     return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
-
+==========================================================================================
 class S
 {
     public:
@@ -189,13 +189,13 @@ int main()
         return false;
     }   );
     
-    
+=================================================================================================================    
 inline bool is_number(const std::string& s)
 {
     return !s.empty() && std::find_if(s.begin(),
        s.end(), [](unsigned char c) { return !std::isdigit(c);  }) == s.end();
 }
-
+=================================================================================================================
 #ifndef PROGRESSBAR_PROGRESSBAR_HPP
 #define PROGRESSBAR_PROGRESSBAR_HPP
 
@@ -248,7 +248,7 @@ public:
 };
 
 #endif //PROGRESSBAR_PROGRESSBAR_HPP
-
+===================================================================================
 static void *memcpy_(void *dst0, const void *src0, size_t length) {
   typedef int word;
 
@@ -296,3 +296,28 @@ if (f)
 
 
 std::string base_filename = path.substr(path.find_last_of("/\\") + 1)
+
+
+=================================================================================
+class BaseClass {
+public:
+    void Func(float f) {
+        cout << "BaseClass:Func() called!";
+    }
+};
+
+class SubClass : public BaseClass {
+public:
+    void Func(int i) {                        // accepts an int, not a float!
+        cout << "SubClass::Func() called!";
+    }
+};
+
+class SubClass : public BaseClass {
+public:
+    using BaseClass::Func;
+    ~~~~~~~~~~~~~~~~~~~~~
+    void Func(int i) {                        // accepts an int, not a float!
+        cout << "SubClass::Func() called!";
+    }
+};
