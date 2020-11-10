@@ -321,3 +321,18 @@ public:
         cout << "SubClass::Func() called!";
     }
 };
+
+=================================================================================
+class MyType {
+ public:
+  // std::initializer_list 专门接收 init 列表。
+  // 得以值传递。
+  MyType(std::initializer_list<int> init_list) {
+    for (int i : init_list) append(i);
+  }
+  MyType& operator=(std::initializer_list<int> init_list) {
+    clear();
+    for (int i : init_list) append(i);
+  }
+};
+MyType m{2, 3, 5, 7};
